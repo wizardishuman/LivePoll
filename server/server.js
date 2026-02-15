@@ -4,7 +4,8 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const crypto = require('crypto');
-// const connectDB = require('./config/database');
+
+const connectDB = require('./config/database');
 const handleSocketConnection = require('./socket/socketHandler');
 
 const pollRoutes = require('./routes/pollRoutes');
@@ -12,143 +13,135 @@ const voteRoutes = require('./routes/voteRoutes');
 
 const app = express();
 const server = http.createServer(app);
+
+// ✅ Socket CORS
 const io = socketIo(server, {
   cors: {
-    origin: "*",
+    origin: [
+      "https://live-poll.vercel.app",
+      "http://localhost:5173"
+    ],
     methods: ["GET", "POST"]
   }
 });
 
-// In-memory user storage for authentication
+// ✅ Connect MongoDB
+connectDB();
+
+// In-memory user storage (temporary auth system)
 const users = new Map();
 
+// Attach io to request
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
 
-// connectDB(); // Commented out for testing
-
+// ✅ Proper CORS config
 app.use(cors({
-  origin: "*",
+  origin: [
+    "https://live-poll.vercel.app",
+    "http://localhost:5173"
+  ],
   credentials: true
 }));
 
 app.use(express.json());
 
-// Authentication endpoints
+/* ================= AUTH ================= */
+
+// Register
 app.post('/api/auth/register', (req, res) => {
   try {
     const { username, email, password } = req.body;
-    
-    if (!username || !email || !password) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-    
-    // Check if user already exists
-    const existingUser = Array.from(users.values()).find(u => u.email === email);
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
-    
-    const userId = Math.random().toString(36).substr(2, 9);
+
+    if (!username || !email || !password)
+      return res.status(400).json({ error: 'All fields required' });
+
+    const exists = Array.from(users.values()).find(u => u.email === email);
+    if (exists)
+      return res.status(400).json({ error: 'User exists' });
+
+    const id = crypto.randomBytes(6).toString('hex');
     const token = crypto.randomBytes(32).toString('hex');
-    
-    const user = {
-      id: userId,
-      username,
-      email,
-      password,
-      token,
-      createdAt: new Date().toISOString()
-    };
-    
-    users.set(userId, user);
-    
-    console.log(`✅ User registered: ${username}`);
-    
+
+    const user = { id, username, email, password, token };
+    users.set(id, user);
+
     res.json({
-      user: { id: userId, username, email },
+      user: { id, username, email },
       token
     });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+
+  } catch (err) {
+    res.status(500).json({ error: 'Register failed' });
   }
 });
 
+// Login
 app.post('/api/auth/login', (req, res) => {
   try {
     const { email, password } = req.body;
-    
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
-    
-    const user = Array.from(users.values()).find(u => u.email === email && u.password === password);
-    if (!user) {
+
+    const user = Array.from(users.values())
+      .find(u => u.email === email && u.password === password);
+
+    if (!user)
       return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    
-    console.log(`✅ User logged in: ${user.username}`);
-    
+
     res.json({
       user: { id: user.id, username: user.username, email: user.email },
       token: user.token
     });
-  } catch (error) {
-    console.error('Login error:', error);
+
+  } catch (err) {
     res.status(500).json({ error: 'Login failed' });
   }
 });
 
-// Dashboard endpoint
+// Dashboard
 app.get('/api/user/dashboard', (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-    
-    const user = Array.from(users.values()).find(u => u.token === token);
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-    
-    res.json({
-      createdPolls: [],
-      votedPolls: [],
-      totalVotes: 0
-    });
-  } catch (error) {
-    console.error('Dashboard error:', error);
-    res.status(500).json({ error: 'Failed to load dashboard' });
-  }
+  const token = req.headers.authorization?.split(' ')[1];
+
+  const user = Array.from(users.values())
+    .find(u => u.token === token);
+
+  if (!user)
+    return res.status(401).json({ error: 'Invalid token' });
+
+  res.json({
+    createdPolls: [],
+    votedPolls: [],
+    totalVotes: 0
+  });
 });
 
-app.use((req, res, next) => {
-  const forwarded = req.headers['x-forwarded-for'];
-  req.ip = forwarded ? forwarded.split(',')[0] : req.connection.remoteAddress;
-  next();
-});
+/* ================= ROUTES ================= */
 
 app.use('/api/polls', pollRoutes);
 app.use('/api/votes', voteRoutes);
 
+/* ================= HEALTH ================= */
+
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ status: "OK" });
 });
+
+/* ================= ERROR ================= */
 
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  console.error(err);
+  res.status(500).json({ error: "Server error" });
 });
 
+/* ================= SOCKET ================= */
+
 handleSocketConnection(io);
+
+/* ================= START ================= */
 
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log('MongoDB connection disabled for testing');
+  console.log(`🚀 Server running on port ${PORT}`);
 });
