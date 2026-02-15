@@ -2,10 +2,10 @@
   "name": "livepoll",
   "version": "1.0.0",
   "description": "A real-time polling application with user authentication and MongoDB Atlas integration",
-  "main": "server.js",
+  "main": "simple-server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node simple-server.js",
+    "dev": "node simple-server.js"
   },
   "keywords": [
     "polling",
