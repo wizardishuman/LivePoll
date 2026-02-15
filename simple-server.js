@@ -239,7 +239,7 @@ app.get('/dashboard', (req, res) => {
 
 // Serve index.html for root route
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/login.html');
+  res.sendFile(__dirname + '/index.html');
 });
 
 app.listen(PORT, () => {

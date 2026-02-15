@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LivePoll - Real-time Polling Application</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .tagline {
+            color: #666;
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .feature {
+            padding: 2rem;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        
+        .feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.1);
+            border-color: #667eea;
+        }
+        
+        .feature h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .feature p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .cta-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .demo-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .demo-links {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .demo-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+        
+        .demo-link:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .cta-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+        
+        function App() {
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            
+            React.useEffect(() => {
+                const token = localStorage.getItem('token');
+                const user = localStorage.getItem('user');
+                setIsLoggedIn(!!token && !!user);
+            }, []);
+            
+            const handleLogin = () => {
+                window.location.href = 'https://livepoll-app.vercel.app/login.html';
+            };
+            
+            const handleDashboard = () => {
+                if (isLoggedIn) {
+                    window.location.href = 'https://livepoll-app.vercel.app/dashboard.html';
+                } else {
+                    handleLogin();
+                }
+            };
+            
+            const handleCreatePoll = () => {
+                if (isLoggedIn) {
+                    window.location.href = 'https://livepoll-app.vercel.app/auth-poll-create.html';
+                } else {
+                    handleLogin();
+                }
+            };
+            
+            if (isLoggedIn) {
+                return (
+                    <div className="container">
+                        <div className="logo">LivePoll</div>
+                        <h1 className="tagline">Welcome to Your Polling Dashboard</h1>
+                        
+                        <div className="features">
+                            <div className="feature">
+                                <h3>📊 Create Polls</h3>
+                                <p>Design and create custom polls with multiple options</p>
+                            </div>
+                            <div className="feature">
+                                <h3>🗳️ Vote & Share</h3>
+                                <p>Real-time voting with instant results</p>
+                            </div>
+                            <div className="feature">
+                                <h3>📈 Analytics</h3>
+                                <p>Track poll performance and user engagement</p>
+                            </div>
+                        </div>
+                        
+                        <div className="cta-container">
+                            <button className="btn btn-primary" onClick={handleDashboard}>
+                                Go to Dashboard
+                            </button>
+                            <button className="btn btn-secondary" onClick={handleCreatePoll}>
+                                Create New Poll
+                            </button>
+                        </div>
+                        
+                        <div className="demo-section">
+                            <h3>🚀 Quick Demo</h3>
+                            <div className="demo-links">
+                                <a href="https://livepoll-app.vercel.app/simple-vote.html#demo-poll-123" className="demo-link">
+                                    🗳️ Try Voting Demo
+                                </a>
+                                <a href="https://livepoll-app.vercel.app/simple-vote.html#sample-poll-456" className="demo-link">
+                                    📊 View Sample Poll
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div className="footer">
+                            <p>Powered by <a href="https://livepoll-4u85.onrender.com/health" target="_blank">LivePoll API</a></p>
+                        </div>
+                    </div>
+                );
+            } else {
+                return (
+                    <div className="container">
+                        <div className="logo">LivePoll</div>
+                        <h1 className="tagline">Real-time Polling Application</h1>
+                        <p className="tagline">Create, share, and vote on polls instantly</p>
+                        
+                        <div className="features">
+                            <div className="feature">
+                                <h3>🔐 Secure Authentication</h3>
+                                <p>User registration and login system</p>
+                            </div>
+                            <div className="feature">
+                                <h3>⚡ Real-time Updates</h3>
+                                <p>Instant voting results and analytics</p>
+                            </div>
+                            <div className="feature">
+                                <h3>🌍 Global Access</h3>
+                                <p>Accessible from anywhere in the world</p>
+                            </div>
+                            <div className="feature">
+                                <h3>📱 Mobile Friendly</h3>
+                                <p>Works perfectly on all devices</p>
+                            </div>
+                        </div>
+                        
+                        <div className="cta-container">
+                            <button className="btn btn-primary" onClick={handleLogin}>
+                                Get Started
+                            </button>
+                        </div>
+                        
+                        <div className="demo-section">
+                            <h3>🎯 Quick Demo</h3>
+                            <div className="demo-links">
+                                <a href="https://livepoll-app.vercel.app/simple-vote.html#demo-poll-123" className="demo-link">
+                                    🗳️ Try Voting Demo
+                                </a>
+                                <a href="https://livepoll-app.vercel.app/simple-vote.html#sample-poll-456" className="demo-link">
+                                    📊 View Sample Poll
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div className="footer">
+                            <p>Powered by <a href="https://livepoll-4u85.onrender.com/health" target="_blank">LivePoll API</a></p>
+                        </div>
+                    </div>
+                );
+            }
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
