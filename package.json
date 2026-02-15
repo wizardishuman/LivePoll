@@ -2,7 +2,7 @@
   "name": "livepoll",
   "version": "2.0.0",
   "description": "Complete polling application with unified deployment",
-  "main": "netlify.js",
+  "main": "simple-server.js",
   "scripts": {
     "start": "node netlify.js",
     "dev": "node netlify.js"
