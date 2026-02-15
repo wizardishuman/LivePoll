@@ -336,6 +336,11 @@ app.post('/api/votes/:pollId', authenticateUser, async (req, res) => {
 // Serve static files
 app.use(express.static(__dirname));
 
+// Dashboard route redirect
+app.get('/dashboard', (req, res) => {
+  res.sendFile(__dirname + '/dashboard.html');
+});
+
 // Serve index.html for root route
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/login.html');
