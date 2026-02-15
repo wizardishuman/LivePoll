@@ -281,7 +281,7 @@
             const fetchPoll = async () => {
                 try {
                     console.log('🔍 Fetching poll:', pollId);
-                    const response = await fetch(`http://localhost:5000/api/polls/${pollId}`);
+                    const response = await fetch(`https://livepoll-api.onrender.com/api/polls/${pollId}`);
                     
                     if (!response.ok) {
                         if (response.status === 404) {
@@ -307,7 +307,7 @@
                 setVoting(true);
                 try {
                     const token = localStorage.getItem('token');
-                    const response = await fetch(`http://localhost:5000/api/votes/${pollId}`, {
+                    const response = await fetch(`https://livepoll-api.onrender.com/api/votes/${pollId}`, {
                         method: 'POST',
                         headers: { 
                             'Content-Type': 'application/json',
