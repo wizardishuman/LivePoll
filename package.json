@@ -1,26 +1,26 @@
 {
   "name": "livepoll",
-  "version": "1.0.0",
-  "description": "A real-time polling application with user authentication and MongoDB Atlas integration",
-  "main": "simple-server.js",
+  "version": "2.0.0",
+  "description": "Complete polling application with unified deployment",
+  "main": "netlify.js",
   "scripts": {
-    "start": "node simple-server.js",
-    "dev": "node simple-server.js"
+    "start": "node netlify.js",
+    "dev": "node netlify.js"
   },
   "keywords": [
     "polling",
     "voting",
     "real-time",
-    "mongodb",
-    "express",
-    "authentication"
+    "netlify",
+    "static-site",
+    "serverless"
   ],
   "author": "LivePoll Team",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
-    "mongoose": "^7.6.3",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.3.1"
   },
   "engines": {
