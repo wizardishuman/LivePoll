@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LivePoll - Vote</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .nav-link {
+            color: #667eea;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .nav-link:hover {
+            background: #f0f4ff;
+        }
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .container {
+            min-height: calc(100vh - 80px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 { color: #333; margin-bottom: 1rem; text-align: center; }
+        .poll-stats {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .total-votes {
+            color: #666;
+            font-size: 0.9rem;
+            background: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .option-item {
+            background: #f8f9fa;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .option-item:hover:not(.voted) {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        .option-item.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .option-item.voted {
+            cursor: default;
+        }
+        .option-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+        .option-text {
+            font-weight: 500;
+            color: #333;
+            text-align: left;
+            flex: 1;
+        }
+        .option-stats {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .vote-count {
+            font-weight: 600;
+            color: #667eea;
+        }
+        .vote-percentage {
+            font-weight: 600;
+            color: #27ae60;
+            min-width: 40px;
+        }
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), rgba(102, 126, 234, 0.2));
+            transition: width 0.5s ease;
+            z-index: 1;
+        }
+        .vote-btn {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 1rem;
+        }
+        .vote-btn:hover:not(:disabled) {
+            background: #5a6fd8;
+        }
+        .vote-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .voted-indicator {
+            color: #27ae60;
+            font-weight: 600;
+            padding: 1rem;
+            background: #d4edda;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .share-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #eee;
+            text-align: center;
+        }
+        .copy-link-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .error, .success {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .error {
+            background: #fee;
+            color: #e74c3c;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .login-prompt {
+            text-align: center;
+            padding: 2rem;
+        }
+        .login-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        function App() {
+            const [user, setUser] = useState(null);
+            const [poll, setPoll] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState('');
+            const [hasVoted, setHasVoted] = useState(false);
+            const [selectedOption, setSelectedOption] = useState(null);
+            const [voting, setVoting] = useState(false);
+            const [message, setMessage] = useState('');
+            
+            // Get poll ID from URL hash
+            const pollId = window.location.hash.substring(1);
+            console.log('🔍 URL hash:', window.location.hash);
+            console.log('🔍 Extracted poll ID:', pollId);
+            
+            useEffect(() => {
+                checkAuth();
+            }, []);
+            
+            useEffect(() => {
+                if (pollId) {
+                    console.log('🚀 Starting poll fetch for ID:', pollId);
+                    fetchPoll();
+                } else {
+                    console.log('❌ No poll ID found in URL');
+                    setError('No poll ID provided');
+                    setLoading(false);
+                }
+            }, [pollId]);
+            
+            const checkAuth = () => {
+                const token = localStorage.getItem('token');
+                const userData = localStorage.getItem('user');
+                
+                if (!token || !userData) {
+                    setUser(null);
+                    setLoading(false);
+                    return;
+                }
+                
+                setUser(JSON.parse(userData));
+            };
+            
+            const fetchPoll = async () => {
+                try {
+                    console.log('🔍 Fetching poll:', pollId);
+                    const response = await fetch(`http://localhost:5000/api/polls/${pollId}`);
+                    
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            throw new Error('Poll not found');
+                        }
+                        throw new Error('Failed to load poll');
+                    }
+                    
+                    const data = await response.json();
+                    console.log('✅ Poll data received:', data);
+                    setPoll(data);
+                } catch (err) {
+                    console.error('❌ Error fetching poll:', err);
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const handleVote = async () => {
+                if (selectedOption === null || hasVoted || voting || !user) return;
+                
+                setVoting(true);
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`http://localhost:5000/api/votes/${pollId}`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ optionIndex: selectedOption })
+                    });
+                    
+                    if (response.status === 401) {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                        setUser(null);
+                        throw new Error('Please login to vote');
+                    }
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to vote');
+                    }
+                    
+                    const data = await response.json();
+                    setPoll(prev => ({
+                        ...prev,
+                        options: data.options
+                    }));
+                    
+                    setHasVoted(true);
+                    setMessage('Vote recorded successfully!');
+                    setTimeout(() => setMessage(''), 3000);
+                } catch (err) {
+                    setMessage(err.message);
+                    setTimeout(() => setMessage(''), 3000);
+                } finally {
+                    setVoting(false);
+                }
+            };
+            
+            const copyLink = () => {
+                navigator.clipboard.writeText(window.location.href);
+                setMessage('Link copied to clipboard!');
+                setTimeout(() => setMessage(''), 3000);
+            };
+            
+            const handleLogout = () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                setUser(null);
+            };
+            
+            if (loading) {
+                return (
+                    <div>
+                        <div className="header">
+                            <div className="logo">LivePoll</div>
+                        </div>
+                        <div className="container">
+                            <div className="card">
+                                <div className="loading">
+                                    <div className="spinner"></div>
+                                    <p>Loading poll...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+            
+            if (error) {
+                return (
+                    <div>
+                        <div className="header">
+                            <div className="logo">LivePoll</div>
+                        </div>
+                        <div className="container">
+                            <div className="card">
+                                <div className="error">
+                                    <h2>Error</h2>
+                                    <p>{error}</p>
+                                    <a href="/login.html" className="login-btn">Go to Login</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+            
+            const totalVotes = poll.options.reduce((sum, option) => sum + option.votes, 0);
+            
+            return (
+                <div>
+                    <div className="header">
+                        <div className="logo">LivePoll</div>
+                        <div className="nav-links">
+                            {user ? (
+                                <>
+                                    <a href="/dashboard.html" className="nav-link">Dashboard</a>
+                                    <a href="/auth-poll-create.html" className="nav-link">Create Poll</a>
+                                    <button className="logout-btn" onClick={handleLogout}>Logout</button>
+                                </>
+                            ) : (
+                                <a href="/login.html" className="login-btn">Login to Vote</a>
+                            )}
+                        </div>
+                    </div>
+                    
+                    <div className="container">
+                        <div className="card">
+                            <h1>{poll.question}</h1>
+                            
+                            <div className="poll-stats">
+                                <span className="total-votes">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</span>
+                            </div>
+                            
+                            {message && <div className={message.includes('success') ? 'success' : 'error'}>{message}</div>}
+                            
+                            {!user && (
+                                <div className="login-prompt">
+                                    <p>Please login to vote on this poll</p>
+                                    <a href="/login.html" className="login-btn">Login to Vote</a>
+                                </div>
+                            )}
+                            
+                            <div className="options-container">
+                                {poll.options.map((option, index) => {
+                                    const percentage = totalVotes > 0 ? Math.round((option.votes / totalVotes) * 100) : 0;
+                                    const isSelected = selectedOption === index;
+                                    
+                                    return (
+                                        <div 
+                                            key={index} 
+                                            className={`option-item ${isSelected ? 'selected' : ''} ${hasVoted ? 'voted' : ''}`}
+                                            onClick={() => user && !hasVoted && setSelectedOption(index)}
+                                        >
+                                            <div className="option-content">
+                                                <div className="option-text">{option.text}</div>
+                                                <div className="option-stats">
+                                                    <span className="vote-count">{option.votes}</span>
+                                                    <span className="vote-percentage">{percentage}%</span>
+                                                </div>
+                                            </div>
+                                            <div 
+                                                className="progress-bar" 
+                                                style={{ width: `${percentage}%` }}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            
+                            {user && !hasVoted && (
+                                <button 
+                                    className="vote-btn"
+                                    onClick={handleVote}
+                                    disabled={selectedOption === null || voting}
+                                >
+                                    {voting ? 'Voting...' : 'Vote'}
+                                </button>
+                            )}
+                            
+                            {hasVoted && (
+                                <div className="voted-indicator">
+                                    ✓ You have voted
+                                </div>
+                            )}
+                            
+                            <div className="share-section">
+                                <p>Share this poll:</p>
+                                <button className="copy-link-btn" onClick={copyLink}>
+                                    Copy Link
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

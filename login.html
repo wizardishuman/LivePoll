@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LivePoll - Login</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 { text-align: center; margin-bottom: 2rem; color: #333; }
+        .tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #eee;
+        }
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+        .form-group { margin-bottom: 1.5rem; }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+        input[type="text"], input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .submit-btn {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .submit-btn:hover:not(:disabled) {
+            background: #5a6fd8;
+        }
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .error {
+            background: #fee;
+            color: #e74c3c;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState } = React;
+        
+        function App() {
+            const [activeTab, setActiveTab] = useState('login');
+            const [loading, setLoading] = useState(false);
+            const [message, setMessage] = useState('');
+            const [messageType, setMessageType] = useState('');
+            
+            if (activeTab === 'login') {
+                return <LoginForm onTabChange={setActiveTab} />;
+            } else {
+                return <RegisterForm onTabChange={setActiveTab} />;
+            }
+        }
+        
+        function LoginForm({ onTabChange }) {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [message, setMessage] = useState('');
+            
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setMessage('');
+                
+                try {
+                    const response = await fetch('http://localhost:5000/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        setMessage('Login successful! Redirecting...');
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 1500);
+                    } else {
+                        setMessage(data.error || 'Login failed');
+                    }
+                } catch (err) {
+                    setMessage('Failed to connect to server');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            return (
+                <div className="card">
+                    <h1>Welcome to LivePoll</h1>
+                    
+                    <div className="tabs">
+                        <div className="tab active" onClick={() => onTabChange('login')}>Login</div>
+                        <div className="tab" onClick={() => onTabChange('register')}>Register</div>
+                    </div>
+                    
+                    {message && <div className="error">{message}</div>}
+                    
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="Enter your email"
+                                required
+                            />
+                        </div>
+                        
+                        <div className="form-group">
+                            <label>Password</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Enter your password"
+                                required
+                            />
+                        </div>
+                        
+                        <button type="submit" className="submit-btn" disabled={loading}>
+                            {loading ? 'Logging in...' : 'Login'}
+                        </button>
+                    </form>
+                </div>
+            );
+        }
+        
+        function RegisterForm({ onTabChange }) {
+            const [username, setUsername] = useState('');
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [message, setMessage] = useState('');
+            
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setMessage('');
+                
+                try {
+                    const response = await fetch('http://localhost:5000/api/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, email, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        setMessage('Registration successful! Redirecting...');
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 1500);
+                    } else {
+                        setMessage(data.error || 'Registration failed');
+                    }
+                } catch (err) {
+                    setMessage('Failed to connect to server');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            return (
+                <div className="card">
+                    <h1>Welcome to LivePoll</h1>
+                    
+                    <div className="tabs">
+                        <div className="tab" onClick={() => onTabChange('login')}>Login</div>
+                        <div className="tab active" onClick={() => onTabChange('register')}>Register</div>
+                    </div>
+                    
+                    {message && <div className="error">{message}</div>}
+                    
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label>Username</label>
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                placeholder="Choose a username"
+                                required
+                            />
+                        </div>
+                        
+                        <div className="form-group">
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="Enter your email"
+                                required
+                            />
+                        </div>
+                        
+                        <div className="form-group">
+                            <label>Password</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Choose a password"
+                                required
+                            />
+                        </div>
+                        
+                        <button type="submit" className="submit-btn" disabled={loading}>
+                            {loading ? 'Creating Account...' : 'Create Account'}
+                        </button>
+                    </form>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
