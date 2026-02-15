@@ -42,7 +42,7 @@ try {
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "*",
+  origin: ["https://livepoll-app.vercel.app", "http://localhost:5000", "http://localhost:3000"],
   credentials: true
 }));
 app.use(express.json());
